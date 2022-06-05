@@ -1,34 +1,44 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+Notes:
+- Created using Next.js using npx create-next-app
+- npm install --legacy-peer-deps
+- npm run dev to run the project in development mode
+- npm install -g @sanity/cli
+- sanity init --coupon javascriptmastery2022
+- sanity manage to control the CNS
+- sanity start will start the manager or localhost:3333
 
-First, run the development server:
+We started by creating a product schema in sanity, similar to a noSql database. Then we created another schema for a banner. Don't forget when you modify the schemas, you also change schema.js to import them right
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+For our next.js part, we first added the babel depend. in eslint and the .babelrc file. (Note, lots of trouble with babelrc compile, fixed it by adding a the babel modules)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+After adding our global styles, we're going to create components. We start with the hero banner by statically for now, but writing this because another error was encountered: babel regenerateruntime failed, we had to add 2 new deps for it to work...
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+We will hook us Sanity right away by creating in the lib directory a client.js file, which will contain our client connection (Remember the token is grabbed from the sanity manager API)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+In case of Next.js, unlike React where we would use the UseEffect lifecycle method, we have tto use:
+export const getServerSideProps = async () => {
+    const query = '*[_type == "product"]'; //grab all products from sanity
+    const products = await client.fetch(query);
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+    const bannerQuery = '*[_type == "banner"]'; 
+    const bannerData = await client.fetch(bannerQuery);
 
-## Learn More
+    return {
+        props: {products, bannerData}
+    };
+}
+This is a function to query data and load it into pages, and we pass the data back to the Home component, and now we can customize the hero banner with data from our Sanity.
+We pass this data to the Herobanner and Product components and dynamically render our landing page.
 
-To learn more about Next.js, take a look at the following resources:
+After getting our products and banner done, we dealt with the Layout component. An encompass of the others which we included in the app.js and it contains the Navbar and the footer.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The next big part of the project is the Product Details pages. In the pages directory, we'll create a product directory with a [slug].js inside it. This time, we'll use something simillar to the index, by grabbing a specific product from our specific path, using next.js with getStaticProps. We also created GetStaticPaths which gets product data, but only what is the current slug, that means title, price and image for the you may also like scenario.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+And for the part we've been waiting for, the state part. In this case we are going to use it in the StateContext file, keeping a general state for all the application. And then we wrap the entire Layout with the context
 
-## Deploy on Vercel
+We will use the context to function properly the cart item, and that is the static site mostly done. One last item on our list is the Stripe functionality which is the only item i am new at.
+In case of Next.js we don't need a Express server, we can do everything in this API folder we have.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Stripe is a neat payment tool, so the only thing left is the success page in the components
